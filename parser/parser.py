@@ -69,6 +69,12 @@ def preprocess(sentence):
     tokenized_words = [a.lower() for a in tokenize if a.isalnum()]
     return tokenized_words
 
+def has_np_ancestor(tree):
+    while tree.parent() is not None:
+        tree = tree.parent()
+        if tree.label() == "NP":
+            return True
+    return False
 
 def np_chunk(tree):
     """
@@ -77,16 +83,16 @@ def np_chunk(tree):
     whose label is "NP" that does not itself contain any other
     noun phrases as subtrees.
     """
-    result = []
-    for subtree in tree.subtrees():
-        appending = True
-        if subtree.label() == "NP":
-            for sub_subtree in subtree.subtrees():
-                if sub_subtree.label() == "NP" and sub_subtree != subtree:
-                    appending = False
-            if appending:
-                result.append(subtree)
-    return result
+    results = []
+    parent = nltk.tree.ParentedTree.convert(tree)
+
+    for s in parent.subtrees(lambda t: t.label() == "NP"):
+        results.append(s)
+
+    results = [np for np in results if not has_np_ancestor(np)]
+        
+    print(f"results-List: {results}")
+    return results
 
 
 if __name__ == "__main__":
