@@ -15,11 +15,17 @@ V -> "smiled" | "tell" | "were"
 """
 
 NONTERMINALS = """
-S -> NP VP
-NP -> Det NP | N | N PP | N VP 
-VP -> V | V NP | V Adv NP
+S -> NP VP | NP VP Conj VP  | NP VP Conj NP VP
+AdjP -> Adj | Adj N PP | Adj AdjP
+NP -> N | N PP | Det N | Det N PP | Det AdjP N | Det N Adv | Det AdjP
 PP -> P NP
+VP -> V | V NP | V PP | Adv V NP | V Adv
 """
+#S -> NP VP | NP VP Conj NP VP | NP VP Conj VP
+#NP -> N | Det N | det N PP | Det N Adv | Det AP N | N PP | N VP
+#VP -> V | Adv VP | V Adv | V Adv NP | V NP
+#AP -> Adj | Adj N PP 
+#PP -> P NP
 
 grammar = nltk.CFG.fromstring(NONTERMINALS + TERMINALS)
 parser = nltk.ChartParser(grammar)
@@ -69,13 +75,6 @@ def preprocess(sentence):
     tokenized_words = [a.lower() for a in tokenize if a.isalnum()]
     return tokenized_words
 
-def has_np_ancestor(tree):
-    while tree.parent() is not None:
-        tree = tree.parent()
-        if tree.label() == "NP":
-            return True
-    return False
-
 def np_chunk(tree):
     """
     Return a list of all noun phrase chunks in the sentence tree.
@@ -84,14 +83,17 @@ def np_chunk(tree):
     noun phrases as subtrees.
     """
     results = []
-    parent = nltk.tree.ParentedTree.convert(tree)
+    if tree.height() == 2:
+        if tree.label() == "NP":
+            results.append(tree)
+        return results
 
-    for s in parent.subtrees(lambda t: t.label() == "NP"):
-        results.append(s)
+    for s in tree:
+        new = np_chunk(s)
+        results += new
+        if s.label() == "NP" and len(new) == 0:
+            results.append(s)
 
-    results = [np for np in results if not has_np_ancestor(np)]
-        
-    print(f"results-List: {results}")
     return results
 
 
