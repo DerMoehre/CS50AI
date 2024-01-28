@@ -64,8 +64,13 @@ def get_color_for_attention_score(attention_score):
     Return a tuple of three integers representing a shade of gray for the
     given `attention_score`. Each value should be in the range [0, 255].
     """
-    # TODO: Implement this function
-    raise NotImplementedError
+    if attention_score == 1:
+        return (255, 255, 255)
+    elif attention_score == 0:
+        return (0, 0, 0)
+    #calculating the gray scale
+    color_grade = int(255 * attention_score)
+    return (color_grade, color_grade, color_grade)
 
 
 
@@ -79,13 +84,18 @@ def visualize_attentions(tokens, attentions):
     include both the layer number (starting count from 1) and head number
     (starting count from 1).
     """
-    # TODO: Update this function to produce diagrams for all layers and heads.
-    generate_diagram(
-        1,
-        1,
-        tokens,
-        attentions[0][0][0]
-    )
+    i = 1
+    j = 1
+    for head in attentions:
+        for layer in head:
+            generate_diagram(
+                i,
+                j,
+                tokens,
+                attentions[j-1][0][i-1]
+            )
+            i += 1
+        j += 1
 
 
 def generate_diagram(layer_number, head_number, tokens, attention_weights):
